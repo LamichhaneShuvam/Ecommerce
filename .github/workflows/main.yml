@@ -35,7 +35,7 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
       - name: deploy-conditions
         run: |
-          echo "frontend='1'" >> $GITHUB_OUTPUT
+          echo ${{ vars.FRONTEND }}
           cat >> difference.sh <<END
             frontend=0
             backend=0
@@ -71,7 +71,7 @@ jobs:
         run: ssh staging 'docker stop ec2-docker-nest && docker rm ec2-docker-nest'
       - name: clone-repo
         run: |
-          echo $STAT
+          echo ${{}}
           ssh staging '
             cd ~/ecommerce &&
             git checkout main &&
