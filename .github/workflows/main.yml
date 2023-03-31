@@ -39,11 +39,9 @@ jobs:
           backend=0
           git diff --name-only HEAD^ HEAD >> diff.txt
           if grep -q "frontend" diff.txt; then
-            echo "changes present in frontend"
             frontend=1
           fi
           if grep -q "backend" diff.txt; then
-            echo "Changes present in backend"
             backend=1
           fi
           echo "BACKEND=$backend" >> $GITHUB_OUTPUT
@@ -52,7 +50,7 @@ jobs:
       - name: env-file-transfer
         run: |
           echo $ENV > .unformatted
-          tr ' ' '\n' < unformatted >> .env
+          tr ' ' '\n' < .unformatted >> .env
           scp .env staging:ecommerce/backend/.env
         env:
           ENV: ${{secrets.BACKEND_ENV}}
@@ -77,8 +75,6 @@ jobs:
       - name: docker-build-deploy-frontend
         if: ${{ steps.dep_conditions.outputs.FRONTEND == 1 }}
         run: >
-          echo "Frontend Deploying..."
-
           ssh staging '
             cd ~/ecommerce/frontend &&
             docker build -t ec2-docker-react . &&
@@ -87,8 +83,6 @@ jobs:
       - name: docker-build-deploy-backend
         if: ${{steps.dep_conditions.outputs.BACKEND == 1 }}
         run: >
-          echo "Backend Deploying..."
-
           ssh staging '
             cd ~/ecommerce/backend &&
             docker build -t ec2-docker-nest . &&
