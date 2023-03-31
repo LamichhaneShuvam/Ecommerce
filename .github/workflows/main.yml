@@ -35,8 +35,8 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
       - name: deploy-conditions
         run: |
-            git diff --name-only HEAD^ HEAD | tee >(rev >/dev/null)
-            cat >> difference.sh <<END
+          git diff --name-only HEAD^ HEAD | tee >(rev >/dev/null)
+          cat >> difference.sh <<END
             frontend=0
             backend=0
             git diff --name-only HEAD^ HEAD >> diff.txt
