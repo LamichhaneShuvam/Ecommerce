@@ -1,26 +1,16 @@
+---
 name: Docker-node-ec2-CI
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
-    branches: ["main"]
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+    branches:
+      - main
+  workflow_dispatch: null
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
-    #output for jobs
     outputs:
       fontend: ${{steps.deploy-conditions.outputs.frontend}}
       backend: ${{steps.deploy-conditions.outputs.backend}}
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - uses: actions/checkout@v3
       - name: ssh-ing
@@ -43,7 +33,6 @@ jobs:
           SSH_USER: ${{ secrets.SSH_USER }}
           SSH_PORT: ${{ secrets.SSH_PORT }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
-
       - name: deploy-conditions
         run: |
           cat >>~/difference.sh <<END
@@ -61,7 +50,6 @@ jobs:
           END
           chmod +x difference.sh
           ./difference.sh
-
       - name: env-file-transfer
         run: |
           echo "HELLO WORLD"
@@ -69,17 +57,14 @@ jobs:
           scp .env staging:ecommerce/.env
         env:
           ENV: ${{secrets.ENV}}
-
       - name: stop-docker-frontend
         if: needs.deploy-conditions.outputs.frontend == 1
         continue-on-error: true
         run: ssh staging 'docker stop ec2-docker-react && docker rm ec2-docker-react'
-        
       - name: stop-docker-backend
-      	if: needs.deploy-conditions.outputs.backend == 1
+        if: needs.deploy-conditions.outputs.backend == 1
         continue-on-error: true
         run: ssh staging 'docker stop ec2-docker-nest && docker rm ec2-docker-nest'
-
       - name: clone-repo
         run: |
           ssh staging '
@@ -89,21 +74,21 @@ jobs:
             git reset --hard origin/main &&
             git pull origin main       
           '
-
       - name: docker-build-deploy-frontend
         if: needs.deploy-conditions.outputs.frontend == 1
-        run: |
+        run: >
           echo "Frontend Deploying..."
+
           ssh staging '
             cd ~/ecommerce/frontend &&
             docker build -t ec2-docker-react . &&
             docker run --name ec2-docker-react -d -p 3007:3007 --add-host=host.docker.internal:host-gateway ec2-docker-react:latest       
           '
-
       - name: docker-build-deploy-backend
         if: needs.deploy-conditions.outputs.backend == 1
-        run: |
+        run: >
           echo "Backend Deploying..."
+
           ssh staging '
             cd ~/ecommerce/backend &&
             docker build -t ec2-docker-nest . &&
