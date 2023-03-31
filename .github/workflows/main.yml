@@ -35,6 +35,7 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
       - name: deploy-conditions
         run: |
+          echo "frontend='1'" >> $GITHUB_OUTPUT
           cat >> difference.sh <<END
             frontend=0
             backend=0
