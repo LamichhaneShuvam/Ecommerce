@@ -1,6 +1,6 @@
 ######################**DEPENDENCIES**##############################
 # Install dependency only when needed
-FROM node:14-alpine AS deps
+FROM node:17-alpine AS deps
 
 RUN apk add --no-cache libc6-compat
 
@@ -13,7 +13,7 @@ RUN npm install
 
 #######################**BUILDER**##################################
 # build stage for trueme
-FROM node:14-alpine AS builder
+FROM node:17-alpine AS builder
 
 WORKDIR /app
 
@@ -26,7 +26,7 @@ RUN npm run build
 
 #######################**RUNNER**###################################
 # run stage for trueme
-FROM node:14-alpine AS runner
+FROM node:17-alpine AS runner
 
 WORKDIR /app
 
