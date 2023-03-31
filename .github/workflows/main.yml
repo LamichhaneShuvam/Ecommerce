@@ -71,7 +71,7 @@ jobs:
           ENV: ${{secrets.ENV}}
 
       - name: stop-docker-frontend
-      	if: needs.deploy-conditions.outputs.frontend == 1
+        if: needs.deploy-conditions.outputs.frontend == 1
         continue-on-error: true
         run: ssh staging 'docker stop ec2-docker-react && docker rm ec2-docker-react'
         
