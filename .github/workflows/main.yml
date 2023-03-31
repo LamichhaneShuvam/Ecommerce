@@ -1,0 +1,111 @@
+name: Docker-node-ec2-CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: ["main"]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    #output for jobs
+    outputs:
+      fontend: ${{steps.deploy-conditions.outputs.frontend}}
+      backend: ${{steps.deploy-conditions.outputs.backend}}
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - uses: actions/checkout@v3
+      - name: ssh-ing
+        run: |
+          mkdir -p ~/.ssh/
+          echo "$SSH_KEY" > ~/.ssh/staging.key
+          chmod 600 ~/.ssh/staging.key
+          cat >>~/.ssh/config <<END
+          Host staging
+            HostName $SSH_HOST
+            User $SSH_USER
+            Port $SSH_PORT
+            IdentityFile ~/.ssh/staging.key
+            StrictHostKeyChecking no
+          END
+        env:
+          GIT_EMAIL: ${{ secrets.GIT_USER_EMAIL }}
+          GIT_USER: ${{ secrets.GIT_USER_NAME }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+
+      - name: deploy-conditions
+        run: |
+          cat >>~/difference.sh <<END
+            frontend=0
+            backend=0
+            git diff --name-only HEAD^ HEAD >> diff.txt
+            if grep -q "frontend" diff.txt; then
+              frontend=1
+            fi
+            if grep -q "backend" diff.txt; then
+              backend=1
+            fi
+            echo "frontend=$frontend" >> $GITHUB_OUTPUT
+            echo "backend=$backend" >> $GITHUB_OUTPUT
+          END
+          chmod +x difference.sh
+          ./difference.sh
+
+      - name: env-file-transfer
+        run: |
+          echo "HELLO WORLD"
+          echo $ENV > .env
+          scp .env staging:ecommerce/.env
+        env:
+          ENV: ${{secrets.ENV}}
+
+      - name: stop-docker-frontend
+      	if: needs.deploy-conditions.outputs.frontend == 1
+        continue-on-error: true
+        run: ssh staging 'docker stop ec2-docker-react && docker rm ec2-docker-react'
+        
+      - name: stop-docker-backend
+      	if: needs.deploy-conditions.outputs.backend == 1
+        continue-on-error: true
+        run: ssh staging 'docker stop ec2-docker-nest && docker rm ec2-docker-nest'
+
+      - name: clone-repo
+        run: |
+          ssh staging '
+            cd ~/ecommerce &&
+            git checkout main &&
+            git fetch --all &&
+            git reset --hard origin/main &&
+            git pull origin main       
+          '
+
+      - name: docker-build-deploy-frontend
+        if: needs.deploy-conditions.outputs.frontend == 1
+        run: |
+          echo "Frontend Deploying..."
+          ssh staging '
+            cd ~/ecommerce/frontend &&
+            docker build -t ec2-docker-react . &&
+            docker run --name ec2-docker-react -d -p 3007:3007 --add-host=host.docker.internal:host-gateway ec2-docker-react:latest       
+          '
+
+      - name: docker-build-deploy-backend
+        if: needs.deploy-conditions.outputs.backend == 1
+        run: |
+          echo "Backend Deploying..."
+          ssh staging '
+            cd ~/ecommerce/backend &&
+            docker build -t ec2-docker-nest . &&
+            docker run --name ec2-docker-nest -d -p 3008:3008 --add-host=host.docker.internal:host-gateway ec2-docker-nest:latest
+          '
