@@ -7,9 +7,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      fontend: ${{steps.deploy-conditions.outputs.frontend}}
-      backend: ${{steps.deploy-conditions.outputs.backend}}
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -35,6 +33,7 @@ jobs:
           SSH_PORT: ${{ secrets.SSH_PORT }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
       - name: deploy-conditions
+        id: dep_conditions
         run: |
           cat >> difference.sh <<END
             frontend=0
@@ -48,8 +47,8 @@ jobs:
               echo "Changes present in backend"
               backend=1
             fi
-            echo "BACKEND=$backend" >> $GITHUB_ENV
-            echo "FRONTEND=$frontend" >> $GITHUB_ENV
+            echo "BACKEND=$backend" >> $GITHUB_OUTPUT
+            echo "FRONTEND=$frontend" >> $GITHUB_OUTPUT
           END
           chmod +x difference.sh
           ./difference.sh
@@ -71,8 +70,8 @@ jobs:
         run: ssh staging 'docker stop ec2-docker-nest && docker rm ec2-docker-nest'
       - name: clone-repo
         run: |
-          echo ${{vars.FRONTEND}}
-          echo ${{vars.BACKEND}}
+          echo ${{ steps.dep_conditions.outputs.FRONTEND }}
+          echo ${{ steps.dep_conditions.outputs.BACKEND }}
           ssh staging '
             cd ~/ecommerce &&
             git checkout main &&
