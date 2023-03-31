@@ -38,6 +38,8 @@ jobs:
           cat >> difference.sh <<END
             frontend=0
             backend=0
+            echo "frontend=$frontend" >> $GITHUB_OUTPUT
+            echo "backend=$backend" >> $GITHUB_OUTPUT
             git diff --name-only HEAD^ HEAD >> diff.txt
             if grep -q "frontend" diff.txt; then
               frontend=1
