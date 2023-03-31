@@ -51,7 +51,8 @@ jobs:
 
       - name: env-file-transfer
         run: |
-          echo $ENV > .env
+          echo $ENV > .unformatted
+          tr ' ' '\n' < unformatted >> .env
           scp .env staging:ecommerce/backend/.env
         env:
           ENV: ${{secrets.BACKEND_ENV}}
