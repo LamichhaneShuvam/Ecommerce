@@ -38,8 +38,8 @@ jobs:
           cat >> difference.sh <<END
             frontend=0
             backend=0
-            echo "frontend=0" >> $GITHUB_OUTPUT
-            echo "backend=0" >> $GITHUB_OUTPUT
+            echo "frontend='0'" >> $GITHUB_OUTPUT
+            echo "backend='0'" >> $GITHUB_OUTPUT
             git diff --name-only HEAD^ HEAD >> diff.txt
             if grep -q "frontend" diff.txt; then
               frontend=1
@@ -58,9 +58,9 @@ jobs:
         run: |
           echo "HELLO WORLD"
           echo $ENV > .env
-          scp .env staging:ecommerce/.env
+          scp .env staging:ecommerce/backend/.env
         env:
-          ENV: ${{secrets.ENV}}
+          ENV: ${{secrets.BACKEND_ENV}}
       - name: stop-docker-frontend
         if: needs.deploy-conditions.outputs.frontend == 1
         continue-on-error: true
