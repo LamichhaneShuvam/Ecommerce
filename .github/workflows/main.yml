@@ -35,12 +35,10 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
       - name: deploy-conditions
         run: |
-          echo ${{ vars.FRONTEND }}
+          git diff --name-only HEAD^ HEAD
           cat >> difference.sh <<END
             frontend=0
             backend=0
-            echo "frontend=1" >> $GITHUB_OUTPUT
-            echo "backend=1" >> $GITHUB_OUTPUT
             git diff --name-only HEAD^ HEAD >> diff.txt
             if grep -q "frontend" diff.txt; then
               frontend=1
@@ -48,8 +46,8 @@ jobs:
             if grep -q "backend" diff.txt; then
               backend=1
             fi
-            echo "frontend=$frontend" >> $GITHUB_OUTPUT
-            echo "backend=$backend" >> $GITHUB_OUTPUT
+            ${{ vars.FRONTEND = $frontend }}
+            ${{ vars.BACKEND == $backend }}
           END
           chmod +x difference.sh
           ./difference.sh
@@ -62,16 +60,17 @@ jobs:
         env:
           ENV: ${{secrets.BACKEND_ENV}}
       - name: stop-docker-frontend
-        if: needs.deploy-conditions.outputs.frontend == '1'
+        if: ${{ vars.FRONTEND == 1 }}
         continue-on-error: true
         run: ssh staging 'docker stop ec2-docker-react && docker rm ec2-docker-react'
       - name: stop-docker-backend
-        if: needs.deploy-conditions.outputs.backend == '1'
+        if: ${{ vars.BACKEND == 1 }}
         continue-on-error: true
         run: ssh staging 'docker stop ec2-docker-nest && docker rm ec2-docker-nest'
       - name: clone-repo
         run: |
           echo ${{vars.FRONTEND}}
+          echo ${{vars.BACKEND}}
           ssh staging '
             cd ~/ecommerce &&
             git checkout main &&
@@ -79,10 +78,9 @@ jobs:
             git reset --hard origin/main &&
             git pull origin main       
           '
-        env:
-          STAT: ${{ needs.deploy-conditions.outputs.frontend }}
+
       - name: docker-build-deploy-frontend
-        if: needs.deploy-conditions.outputs.frontend == 1
+        if: ${{ vars.FRONTEND == 1 }}
         run: >
           echo "Frontend Deploying..."
 
@@ -92,7 +90,7 @@ jobs:
             docker run --name ec2-docker-react -d -p 3007:3007 --add-host=host.docker.internal:host-gateway ec2-docker-react:latest       
           '
       - name: docker-build-deploy-backend
-        if: needs.deploy-conditions.outputs.backend == 1
+        if: ${{ vars.BACKEND == 1 }}
         run: >
           echo "Backend Deploying..."
 
