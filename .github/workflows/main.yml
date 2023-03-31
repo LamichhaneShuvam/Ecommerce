@@ -48,9 +48,10 @@ jobs:
             echo "frontend=$frontend" >> $GITHUB_OUTPUT
             echo "backend=$backend" >> $GITHUB_OUTPUT
           END
-          cat diff.txt
           chmod +x difference.sh
           ./difference.sh
+          cat diff.txt
+
       - name: env-file-transfer
         run: |
           echo "HELLO WORLD"
