@@ -35,7 +35,7 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
       - name: deploy-conditions
         run: |
-          cat >>~/difference.sh <<END
+          cat >> difference.sh <<END
             frontend=0
             backend=0
             git diff --name-only HEAD^ HEAD >> diff.txt
@@ -48,6 +48,7 @@ jobs:
             echo "frontend=$frontend" >> $GITHUB_OUTPUT
             echo "backend=$backend" >> $GITHUB_OUTPUT
           END
+          ls
           chmod +x difference.sh
           ./difference.sh
       - name: env-file-transfer
