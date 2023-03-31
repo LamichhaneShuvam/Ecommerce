@@ -5,7 +5,6 @@ import { env } from 'process';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  console.log("changes");
   await app.listen(parseInt(env.PORT) || 3000, () => {
     Logger.log(
       `Application Started At PORT ${env.PORT || 3000}`,
