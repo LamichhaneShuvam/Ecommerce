@@ -36,7 +36,6 @@ jobs:
           SSH_HOST: ${{ secrets.SSH_HOST }}
       - name: deploy-conditions
         run: |
-          ls -a
           cat >> difference.sh <<END
             frontend=0
             backend=0
