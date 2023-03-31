@@ -38,15 +38,16 @@ jobs:
       - name: deploy-conditions
         run: |
           ls -a
-          git diff --name-only origin/main origin/${GITHUB_HEAD_REF} | tee >(rev >/dev/null)
           cat >> difference.sh <<END
             frontend=0
             backend=0
             git diff --name-only HEAD^ HEAD >> diff.txt
             if grep -q "frontend" diff.txt; then
+              echo "changes present in frontend"
               frontend=1
             fi
             if grep -q "backend" diff.txt; then
+              echo "Changes present in backend"
               backend=1
             fi
             echo "BACKEND=$backend" >> $GITHUB_ENV
