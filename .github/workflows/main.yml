@@ -46,8 +46,8 @@ jobs:
             if grep -q "backend" diff.txt; then
               backend=1
             fi
-            ${{ vars.FRONTEND = $frontend }}
-            ${{ vars.BACKEND == $backend }}
+            vars.FRONTEND = $frontend
+            vars.BACKEND = $backend
           END
           chmod +x difference.sh
           ./difference.sh
