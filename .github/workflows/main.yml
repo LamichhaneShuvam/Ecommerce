@@ -61,17 +61,15 @@ jobs:
         env:
           ENV: ${{secrets.BACKEND_ENV}}
       - name: stop-docker-frontend
-        if: ${{ vars.FRONTEND == 1 }}
+        if: ${{ steps.dep_conditions.outputs.FRONTEND == 1 }}
         continue-on-error: true
         run: ssh staging 'docker stop ec2-docker-react && docker rm ec2-docker-react'
       - name: stop-docker-backend
-        if: ${{ vars.BACKEND == 1 }}
+        if: ${{ steps.dep_conditions.outputs.BACKEND == 1 }}
         continue-on-error: true
         run: ssh staging 'docker stop ec2-docker-nest && docker rm ec2-docker-nest'
       - name: clone-repo
         run: |
-          echo ${{ steps.dep_conditions.outputs.FRONTEND }}
-          echo ${{ steps.dep_conditions.outputs.BACKEND }}
           ssh staging '
             cd ~/ecommerce &&
             git checkout main &&
@@ -81,7 +79,7 @@ jobs:
           '
 
       - name: docker-build-deploy-frontend
-        if: ${{ vars.FRONTEND == 1 }}
+        if: ${{ steps.dep_conditions.outputs.FRONTEND == 1 }}
         run: >
           echo "Frontend Deploying..."
 
@@ -91,7 +89,7 @@ jobs:
             docker run --name ec2-docker-react -d -p 3007:3007 --add-host=host.docker.internal:host-gateway ec2-docker-react:latest       
           '
       - name: docker-build-deploy-backend
-        if: ${{ vars.BACKEND == 1 }}
+        if: ${{steps.dep_conditions.outputs.BACKEND == 1 }}
         run: >
           echo "Backend Deploying..."
 
