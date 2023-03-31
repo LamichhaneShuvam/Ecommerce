@@ -36,6 +36,8 @@ jobs:
         id: dep_conditions
         run: |
           cat >> difference.sh <<END
+            #!/bin/bash
+            
             frontend=0
             backend=0
             git diff --name-only HEAD^ HEAD >> diff.txt
