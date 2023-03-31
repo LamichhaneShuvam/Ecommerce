@@ -48,7 +48,7 @@ jobs:
             echo "frontend=$frontend" >> $GITHUB_OUTPUT
             echo "backend=$backend" >> $GITHUB_OUTPUT
           END
-          ls
+          git log
           chmod +x difference.sh
           ./difference.sh
       - name: env-file-transfer
