@@ -71,7 +71,7 @@ jobs:
         run: ssh staging 'docker stop ec2-docker-nest && docker rm ec2-docker-nest'
       - name: clone-repo
         run: |
-          echo ${{needs.deploy-conditions.outputs.frontend}}
+          echo ${{stat}}
           ssh staging '
             cd ~/ecommerce &&
             git checkout main &&
@@ -79,6 +79,8 @@ jobs:
             git reset --hard origin/main &&
             git pull origin main       
           '
+        env:
+          stat: ${{ needs.deploy-conditions.outputs.frontend }}
       - name: docker-build-deploy-frontend
         if: needs.deploy-conditions.outputs.frontend == 1
         run: >
