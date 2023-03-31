@@ -71,7 +71,7 @@ jobs:
         run: ssh staging 'docker stop ec2-docker-nest && docker rm ec2-docker-nest'
       - name: clone-repo
         run: |
-          echo ${{}}
+          echo ${{vars.FRONTEND}}
           ssh staging '
             cd ~/ecommerce &&
             git checkout main &&
